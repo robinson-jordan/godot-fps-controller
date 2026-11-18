@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://c675a4fu8jcca"]
+
+[ext_resource type="Script" uid="uid://cei06b348exsu" path="res://fps_controller/fps_controller.gd" id="1_pquoo"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_d30vs"]
+
+[node name="FPSController" type="CharacterBody3D" unique_id=743609727]
+script = ExtResource("1_pquoo")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=420345478]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_d30vs")
+
+[node name="BodyPivot" type="Node3D" parent="." unique_id=255520074]
+
+[node name="HeadPivot" type="Node3D" parent="BodyPivot" unique_id=376758180]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="Camera3D" type="Camera3D" parent="BodyPivot/HeadPivot" unique_id=1762837224]
