@@ -4,7 +4,7 @@ extends CharacterBody3D
 ##
 ## Features:
 ## - Mouse look with configurable sensitivity and pitch limits.
-## - Physics-based movement movement and jumping.
+## - Physics-based movement and jumping.
 ## - Smooth camera motion using physics interpolation.
 ## - Automatic mouse capture and release.
 ## - Separation of yaw and pitch using body and head pivots.
@@ -24,14 +24,17 @@ extends CharacterBody3D
 
 @export_group("Mouse Look")
 @export var mouse_sensitivity: float = 0.002
-@export var look_down_limit: float = -85.0
-@export var look_up_limit: float = 85.0
+@export var look_down_limit: float = -85.0:
+	set = _set_min_head_pitch
+@export var look_up_limit: float = 85.0:
+	set = _set_max_head_pitch
 @export_group("Movement")
 @export var move_speed: float = 5.0
 @export var jump_velocity: float = 4.5
 
 var body_yaw: float
 var head_pitch: float
+
 var _min_head_pitch: float
 var _max_head_pitch: float
 
@@ -39,17 +42,17 @@ var _max_head_pitch: float
 @onready var head_pivot: Node3D = $BodyPivot/HeadPivot
 
 
-func _enter_tree() -> void:
-	# Cache the look up / down limits as radians.
-	_min_head_pitch = deg_to_rad(look_down_limit)
-	_max_head_pitch = deg_to_rad(look_up_limit)
-
-
 func _ready() -> void:
 	if not is_physics_interpolated_and_enabled():
-		push_warning("FPSController is designed to work with physics
-				interpolation enabled. Enable this in: Project Settings
-				> Physics > Common. You may need to enable 'Advanced Settings'")
+		push_warning(
+			"FPSController is designed to be used with physics interpolation "
+			+ "enabled. Enable it in Project Settings > Physics > Common. "
+			+ "You may need to enable 'Advanced Settings' to see this option."
+		)
+	
+	# Set starting values
+	_set_min_head_pitch(look_down_limit)
+	_set_max_head_pitch(look_up_limit)
 	
 	# Assign current pivot rotations to prevent snapping to 0.
 	body_yaw = body_pivot.rotation.y
@@ -97,17 +100,23 @@ func _physics_process(delta: float) -> void:
 
 	# Set the direction using the input vector and the body_pivot basis.
 	# CharacterBody3D will not be rotated.
-	var input_dir: Vector2 = Input.get_vector("move_left", "move_right",
-			"move_forward", "move_backward")
-	var direction: Vector3 = (body_pivot.basis * Vector3(input_dir.x, 0,
-			input_dir.y)).normalized()
+	var input_dir: Vector2 = Input.get_vector(
+			"move_left",
+			"move_right",
+			"move_forward",
+			"move_backward"
+	)
 	
-	if direction:
-		velocity.x = direction.x * move_speed
-		velocity.z = direction.z * move_speed
+	var move_dir: Vector3 = (
+			body_pivot.basis * Vector3(input_dir.x, 0.0, input_dir.y)
+	).normalized()
+	
+	if move_dir:
+		velocity.x = move_dir.x * move_speed
+		velocity.z = move_dir.z * move_speed
 	else:
-		velocity.x = move_toward(velocity.x, 0, move_speed)
-		velocity.z = move_toward(velocity.z, 0, move_speed)
+		velocity.x = 0.0
+		velocity.z = 0.0
 
 	move_and_slide()
 
@@ -138,3 +147,13 @@ func _look_around(event: InputEventMouseMotion) -> void:
 	
 	body_pivot.rotation.y = body_yaw
 	head_pivot.rotation.x = head_pitch
+
+
+func _set_min_head_pitch(new_limit_deg: float) -> void:
+	look_down_limit = new_limit_deg
+	_min_head_pitch = deg_to_rad(new_limit_deg)
+
+
+func _set_max_head_pitch(new_limit_deg: float) -> void:
+	look_up_limit = new_limit_deg
+	_max_head_pitch = deg_to_rad(new_limit_deg)
